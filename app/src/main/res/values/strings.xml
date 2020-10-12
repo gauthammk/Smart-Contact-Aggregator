@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Smart Contact Aggregator</string>
+    <string name="consent_form_heading">Consent form for collection of personal data by the institute</string>
+    <string name="consent_form_data">Sample consent form data</string>
+    <string name="welcome">Welcome</string>
+    <string name="agreement">I agree with the above terms and conditions</string>
+    <string name="name">Name</string>
+    <string name="start">Start</string>
+    <string name="view_results">View Results</string>
+    <string name="aggregator">Aggregator</string>
+    <string name="please_wait">Please wait while we process your call and SMS records.</string>
+
+</resources>
