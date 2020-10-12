@@ -113,17 +113,20 @@ public class Aggregator extends AppCompatActivity {
 
                 @Override
                 public void onResponse(final Call call, final Response response) throws IOException {
+                    String serverResponse;
                     if (!response.isSuccessful()) {
-                        System.out.println("SERVER ERROR OCCURRED: " + response.body().string());
-                        results = findViewById(R.id.results);
-                        results.setText(response.body().string());
+                        serverResponse = response.body().string();
+                        System.out.println("SERVER ERROR OCCURRED: " + serverResponse);
+                        results = findViewById(R.id.resultsView);
+                        results.setText(serverResponse);
                     } else {
+                        serverResponse = response.body().string();
                         System.out.println("UPLOAD SUCCESSFUL.");
-                        System.out.println(response.body().string());
+                        System.out.println(serverResponse);
 
                         // set the response in the text view
-                        results = findViewById(R.id.results);
-                        results.setText(response.body().string());
+                        results = findViewById(R.id.resultsView);
+                        results.setText(serverResponse);
                     }
                 }
             });
