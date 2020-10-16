@@ -31,4 +31,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'org.hashids:hashids:1.0.3'
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
 }

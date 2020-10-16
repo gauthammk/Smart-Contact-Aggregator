@@ -7,9 +7,9 @@
     tools:context=".MainActivity"
     android:background="@color/colorPrimaryLight">
 
-    <!-- Welcome -->
+    <!-- welcomeHeading -->
     <TextView
-        android:id="@+id/welcome"
+        android:id="@+id/welcomeHeading"
         android:layout_width="330dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="250dp"
@@ -29,9 +29,9 @@
         android:gravity="center"
         android:text="@string/consent_form_heading"
         android:textAppearance="@style/underline_heading"
-        app:layout_constraintEnd_toEndOf="@+id/welcome"
-        app:layout_constraintStart_toStartOf="@+id/welcome"
-        app:layout_constraintTop_toBottomOf="@+id/welcome" />
+        app:layout_constraintEnd_toEndOf="@+id/welcomeHeading"
+        app:layout_constraintStart_toStartOf="@+id/welcomeHeading"
+        app:layout_constraintTop_toBottomOf="@+id/welcomeHeading" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
@@ -48,10 +48,10 @@
         android:layout_height="200dp"
         android:layout_marginTop="20dp"
         android:background="@drawable/text_box"
-        app:layout_constraintEnd_toEndOf="@+id/welcome"
-        app:layout_constraintStart_toStartOf="@+id/welcome"
+        app:layout_constraintEnd_toEndOf="@+id/welcomeHeading"
+        app:layout_constraintStart_toStartOf="@+id/welcomeHeading"
         app:layout_constraintTop_toBottomOf="@+id/consentFormHeading"
-        android:padding="10dp">
+        android:padding="15dp">
 
         <TextView
             android:id="@+id/consentFormData"
@@ -72,8 +72,8 @@
         android:textColor="@color/colorPrimary"
         android:inputType="textPersonName"
         android:textAppearance="@style/body_text"
-        app:layout_constraintEnd_toEndOf="@+id/welcome"
-        app:layout_constraintStart_toStartOf="@+id/welcome"
+        app:layout_constraintEnd_toEndOf="@+id/welcomeHeading"
+        app:layout_constraintStart_toStartOf="@+id/welcomeHeading"
         app:layout_constraintTop_toBottomOf="@+id/consentFormScrollView"
         tools:ignore="Autofill"
         android:background="@drawable/text_box"
@@ -87,8 +87,8 @@
         android:text="@string/agreement"
         android:textColor="@color/colorPrimary"
         android:textAppearance="@style/body_text"
-        app:layout_constraintEnd_toEndOf="@+id/welcome"
-        app:layout_constraintStart_toStartOf="@+id/welcome"
+        app:layout_constraintEnd_toEndOf="@+id/welcomeHeading"
+        app:layout_constraintStart_toStartOf="@+id/welcomeHeading"
         app:layout_constraintTop_toBottomOf="@+id/nameTextBox" />
 
     <Button
@@ -99,8 +99,8 @@
         android:text="@string/start"
         android:background="@drawable/button"
         android:textAppearance="@style/button_text"
-        app:layout_constraintEnd_toEndOf="@+id/welcome"
-        app:layout_constraintStart_toStartOf="@+id/welcome"
+        app:layout_constraintEnd_toEndOf="@+id/welcomeHeading"
+        app:layout_constraintStart_toStartOf="@+id/welcomeHeading"
         app:layout_constraintTop_toBottomOf="@+id/consentCheckbox"
         android:paddingRight="20dp"
         android:paddingLeft="20dp"/>

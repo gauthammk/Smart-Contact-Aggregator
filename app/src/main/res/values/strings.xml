@@ -1,7 +1,21 @@
 <resources>
     <string name="app_name">Smart Contact Aggregator</string>
     <string name="consent_form_heading">Consent form for collection of personal data by the institute</string>
-    <string name="consent_form_data">Sample consent form data</string>
+    <string name="consent_form_data">
+        I understand that Institute intends to collect:\n\n
+        Call Records (Contact name, date &amp; time of calling, duration, last modified type: incoming or outgoing, number type: home or work etc.);\n\n
+        Message records (message content for messages by contacts in phonebook, read or not, type as sent or received, date &amp; time of SMS);\n\n
+        Contact records (contact name, Is photo exist, is pinned, has custom ringtone, phonetic name, send to voicemail, is auto recording, has phone number, in visible group , Group - for eg:work/home etc., relationship: parent/friend etc., Is e-mail existing, Is starred, contact last updated), Detailed mapped by user like relationship of frequent contacts (“Personal Data”) for the research and development purposes of Institute and SRI-B (Purpose/ Program”).
+        \n\nI also understand that participation in the Purpose/ Program is purely voluntary.\n\n
+        I hereby declare that:\n\nI have understood the Purpose/Program.\n\nI have voluntarily agreed to participate in the Purpose/ Program and I am voluntarily providing/allowing Institute to collect, and share my Personal Data with SRI-B.
+        \n\nI understand that:\n\nSRI-B may share my Personal Data with their business partners/service providers for the Purpose.
+        \n\nI hereby agree to keep my participation in the Program strictly confidential and shall not disclose the details of the Purpose/ Program to any third party.
+        \n\nI hereby acknowledge that I have knowingly and voluntarily, without duress or reservation of any kind, signed this consent form.
+        \n\nDefinitions/Details of Institute &amp; SRI-B
+        \n\nB.M.S. College of Engineering, Bull Temple Rd, Basavanagudi, Bengaluru, Karnataka 560019 (“Institute”)
+        \n\nSamsung R&amp;D Institute India-Bangalore Private Limited a company incorporated in India having its registered office at 2870, Phoenix Building, Bagmane Constellation Business Park, Outer Ring Road, Doddanekundi Circle,  Marathahalli Post, Bangalore – 560 037 (“SRI-B”) and shall include its Affiliates also.
+        \n\n\"Affiliate\" means an entity that directly or indirectly Controls, is Controlled by, or is under common Control with another entity, so long as such Control exists. For the purpose of this definition, “Control” means beneficial ownership of more than 50% (fifty percent) of the voting power or equity in an entity.
+    </string>
     <string name="welcome">Welcome</string>
     <string name="agreement">I agree with the above terms and conditions</string>
     <string name="name">Name</string>
@@ -9,5 +23,6 @@
     <string name="view_results">View Results</string>
     <string name="aggregator">Aggregator</string>
     <string name="please_wait">Please wait while we process your call and SMS records.</string>
+    <string name="results">Results</string>
 
 </resources>

@@ -20,8 +20,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 import static android.provider.CallLog.Calls.CACHED_NAME;
@@ -44,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
     String[] callRecords;
     Hashids hashids;
 
+    HashMap<String, String> nameHash = new HashMap<String, String>();
+    HashMap<String, Integer> idHash = new HashMap<String, Integer>();
+    int maxId = 1;
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         nameTextBox = findViewById(R.id.nameTextBox);
         consentCheckbox = findViewById(R.id.consentCheckbox);
 
-        // initialise the hashid
+        // initialise the hash id
         hashids = new Hashids("Samsung Worklet");
 
 
@@ -85,6 +91,9 @@ public class MainActivity extends AppCompatActivity {
                     Intent aggregatorOpener = new Intent(MainActivity.this, Aggregator.class);
                     aggregatorOpener.putExtra("callRecords", callRecords);
                     aggregatorOpener.putExtra("SMSRecords", SMSRecords);
+                    aggregatorOpener.putExtra("nameHash", nameHash);
+                    aggregatorOpener.putExtra("idHash", idHash);
+
                     startActivity(aggregatorOpener);
                 }else {
                     Toast.makeText(getApplicationContext(), "Please fill all the details.", Toast.LENGTH_SHORT).show();
@@ -95,9 +104,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch(requestCode){
+            case 1:{
+                if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED&&grantResults[1]==PackageManager.PERMISSION_GRANTED){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        callRecords=getCallDetails();
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        SMSRecords=getSMSData();
+                    }
+                }
+            }
+            default:super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public String[] getCallDetails() {
-        String[] callRecordArray = new String[10];
+        //String[] callRecordArray = new String[10];
+
+        DynamicArray callRecordArray = new DynamicArray();
         int k = 0;
 
         String[] projection = new String[]{
@@ -116,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
                     String type = managedCursor.getString(2);
                     String date = managedCursor.getString(3);
                     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ENGLISH);
-                    String dateString = formatter.format(new Date(Long.parseLong(date)));
+                    String dateStr = formatter.format(new Date(Long.parseLong(date)));
+                    String  dateString = unixTime(dateStr).toString();
                     String duration = managedCursor.getString(4);
                     String dir = null;
                     int dircode = Integer.parseInt(type);
@@ -134,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
                     // append to array if element does not exist already.
-                    if (name.length() > 0) {
+                    if (name != null || name != "null"|| name.length() > 0 ) {
                         //hash phone number
                         if (number.length() > 10) {
                             number = number.substring(3);
@@ -142,24 +170,37 @@ public class MainActivity extends AppCompatActivity {
                         long numberInt = Long.parseLong(number);
                         String hashedNumber = hashids.encode(numberInt);
 
-                        callRecordArray[k++] = "\n" + name + "," + hashedNumber + "," + dir + "," + dateString + "," + duration;
+                        if(hashedNumber != null){
+                            if(nameHash.containsKey(hashedNumber) == false){
+                                nameHash.put(hashedNumber, name);
+                                //System.out.println("Inside :   " + name + "   " + number);
+                            }
+                            if(idHash.containsKey(hashedNumber) == false){
+                                idHash.put(hashedNumber, maxId);
+                                maxId += 1;
+                            }
+                        }
+
+                        callRecordArray.add(idHash.get(hashedNumber) + "," + name + "," + dir + "," + dateString + "," + duration+"\n");
                     }
                 }
             }
+            callRecordArray.shrinkSize();
             System.out.println("\n----------------CALL RECORD ARRAY-------------");
-            System.out.println("Length of Call Record Array : " + callRecordArray.length);
-            for (String callRecord : callRecordArray) {
+            System.out.println("Length of Call Record Array : " + callRecordArray.array.length);
+            for (String callRecord : callRecordArray.array) {
                 System.out.println(callRecord);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return callRecordArray;
+        return callRecordArray.array;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public String[] getSMSData(){
-        String[] SMSRecordArray = new String[10];
+        //String[] SMSRecordArray = new String[10];
+        DynamicArray SMSRecordArray = new DynamicArray();
         int k = 0;
         String[] projection = new String[] { "_id", "address", "person", "body", "date", "type" };
         String INBOX = "content://sms/inbox";
@@ -176,7 +217,8 @@ public class MainActivity extends AppCompatActivity {
                     String date = managedCursor.getString(4);
                     String type = managedCursor.getString(5);
                     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ENGLISH);
-                    String dateString = formatter.format(new Date(Long.parseLong(date)));
+                    String dateStr = formatter.format(new Date(Long.parseLong(date)));
+                    String  dateString = unixTime(dateStr).toString();
                     //removing the commas from the SMS body so that it does not interfere with the csv file format
                     body = body.replace(',','.');
                     body = body.replace('\n',' ');
@@ -187,19 +229,87 @@ public class MainActivity extends AppCompatActivity {
                         }
                         long numberInt = Long.parseLong(number);
                         String hashedNumber = hashids.encode(numberInt);
-                        SMSRecordArray[k++] = "\n" +  id + "," + hashedNumber + "," + person + "," + body + "," + dateString + "," + type;
+                        if(hashedNumber != null){
+                            if(idHash.containsKey(hashedNumber) == false){
+                                idHash.put(hashedNumber, maxId);
+                                maxId += 1;
+                            }
+                            if(nameHash.containsKey(hashedNumber)){
+                                SMSRecordArray.add(idHash.get(hashedNumber) + "," +  nameHash.get(hashedNumber)+ "," + body + "," + dateString +"\n");
+                            }
+                        }
+                        //SMSRecordArray[k++] = "\n" +  id + "," + hashedNumber + "," + person + "," + body + "," + dateString + "," + type;
                     }
                 }//gives number of records
             }
+            SMSRecordArray.shrinkSize();
             //add to the view
             System.out.println("----------------SMS RECORD ARRAY-------------");
-            System.out.println("Length of Call SMS Array : " + SMSRecordArray.length);
-            for (String SMSRecord : SMSRecordArray) {
+            System.out.println("Length of Call SMS Array : " + SMSRecordArray.array.length);
+            for (String SMSRecord : SMSRecordArray.array) {
                 System.out.println(SMSRecord);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return SMSRecordArray;
+        return SMSRecordArray.array;
+    }
+    public static Long unixTime(String timestamp){
+        if(timestamp == null) return null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ENGLISH);
+            Date dt = sdf.parse(timestamp);
+            long epoch = dt.getTime();
+            //return (int)(epoch/1000);
+            return epoch;
+        } catch(ParseException e) {
+            return null;
+        }
+    }
+    public static class DynamicArray {
+
+        public String array[];
+        public int count;
+        public int size;
+
+        public DynamicArray() {
+            array = new String[1];
+            count = 0;
+            size = 1;
+        }
+
+        public void add(String data) {
+            if (count == size) {
+                growSize();
+            }
+            array[count] = data;
+            count++;
+        }
+
+        public void growSize() {
+
+            String temp[] = null;
+            if (count == size) {
+                temp = new String[size * 2];
+                {
+                    for (int i = 0; i < size; i++) {
+                        temp[i] = array[i];
+                    }
+                }
+            }
+            array = temp;
+            size = size * 2;
+        }
+        public void shrinkSize() {
+            String temp[] = null;
+            if (count > 0) {
+                temp = new String[count];
+                for (int i = 0; i < count; i++) {
+                    temp[i] = array[i];
+                }
+                size = count;
+                array = temp;
+            }
+        }
     }
 }

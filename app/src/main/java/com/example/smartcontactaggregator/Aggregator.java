@@ -4,10 +4,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +22,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -31,13 +39,26 @@ public class Aggregator extends AppCompatActivity {
     StringBuilder callRecordsCommaSeparated;
     StringBuilder SMSRecordsCommaSeparated;
     String[] callRecords, SMSRecords;
-    TextView results;
+    HashMap<String, String> nameHash = new HashMap<String, String>();
+    HashMap<String, Integer> idHash = new HashMap<String, Integer>();
+
+    TextView loadingView;
+    ProgressBar loader;
+    Button viewResultsButton;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_aggregator);
+
+        // initialise elements
+        loadingView = findViewById(R.id.loadingView);
+        loader = findViewById(R.id.loader);
+        viewResultsButton = findViewById(R.id.viewResultsButton);
+
+        // needed for creating the hashes
+        final Intent inte = getIntent();
 
         // get the records from the previous page
         Bundle extras = getIntent().getExtras();
@@ -46,19 +67,25 @@ public class Aggregator extends AppCompatActivity {
             SMSRecords = extras.getStringArray("SMSRecords");
             System.out.println("Length of Call Record Array : " + callRecords.length);
             System.out.println("Length of SMS record Array : " + SMSRecords.length);
+            nameHash = (HashMap<String, String>)inte.getSerializableExtra("nameHash");
+            idHash = (HashMap<String, Integer>)inte.getSerializableExtra("idHash");
         }else{
             System.out.println("No records found!");
         }
 
         // build the string to convert to a csv
         callRecordsCommaSeparated = new StringBuilder();
+        callRecordsCommaSeparated.append("Id, Name, CallType, Date_Time, Duration\n");
         for (String record: callRecords){
-            callRecordsCommaSeparated.append(record);
+            if(record != null || record != "null")
+                callRecordsCommaSeparated.append(record);
         }
 
         SMSRecordsCommaSeparated = new StringBuilder();
+        SMSRecordsCommaSeparated.append("ID, Name, Message, Date_Time\n");
         for (String record: SMSRecords){
-            SMSRecordsCommaSeparated.append(record);
+            if(record != null || record != "null")
+                SMSRecordsCommaSeparated.append(record);
         }
 
         // write strings to files
@@ -72,7 +99,72 @@ public class Aggregator extends AppCompatActivity {
 
         // make the HTTP request
         String endpoint = "https://samsung-worklet.herokuapp.com/file-upload-api";
-        uploadRecords(endpoint, callRecordsFile, SMSRecordsFile);
+
+            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("calls_file", callRecordsFile.getName(),
+                            RequestBody.create(MediaType.parse("text/csv"), callRecordsFile))
+                    .addFormDataPart("SMS_file", SMSRecordsFile.getName(),
+                            RequestBody.create(MediaType.parse("text/csv"), SMSRecordsFile))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(endpoint)
+                    .post(requestBody)
+                    .build();
+
+            OkHttpClient client = new OkHttpClient();
+            client.newCall(request).enqueue(new Callback() {
+
+                @Override
+                public void onFailure(final Call call, final IOException e) {
+
+                    // display error on failure
+                    System.out.println("ERROR OCCURRED." + e);
+                }
+
+                @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                @Override
+                public void onResponse(@NotNull final Call call, @NotNull final Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        final String myResponse = Objects.requireNonNull(response.body()).string();
+                        Aggregator.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try{
+                                    System.out.println("DEBUG RESPONSE: " + myResponse);
+
+                                    // hide the loading entities
+                                    loadingView.setVisibility(View.GONE);
+                                    loader.setVisibility(View.GONE);
+
+                                    // display the button to the result page
+                                    viewResultsButton.setVisibility(View.VISIBLE);
+                                    viewResultsButton.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            Intent resultsDisplayOpener = new Intent(Aggregator.this, ResultDisplay.class);
+                                            resultsDisplayOpener.putExtra("RESPONSE", myResponse);
+                                            startActivity(resultsDisplayOpener);
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    } else {
+                        // display incorrect file type errors to the user
+                        Aggregator.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                loader.setVisibility(View.GONE);
+                                loadingView.setText("An unexpected error occurred.");
+                            }
+                        });
+                        System.out.println("DEBUG RESPONSE: " + response.body().string());
+                    }
+                }
+            });
 
     }
 
@@ -86,55 +178,5 @@ public class Aggregator extends AppCompatActivity {
         catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public Boolean uploadRecords(String serverURL, File file1, File file2) {
-        try {
-
-            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("calls_file", file1.getName(),
-                            RequestBody.create(MediaType.parse("text/csv"), file1))
-                    .addFormDataPart("SMS_file", file2.getName(),
-                            RequestBody.create(MediaType.parse("text/csv"), file2))
-                    .build();
-
-            Request request = new Request.Builder()
-                    .url(serverURL)
-                    .post(requestBody)
-                    .build();
-
-            OkHttpClient client = new OkHttpClient();
-            client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    System.out.println("ERROR OCCURRED." + e);
-                }
-
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
-                    String serverResponse;
-                    if (!response.isSuccessful()) {
-                        serverResponse = response.body().string();
-                        System.out.println("SERVER ERROR OCCURRED: " + serverResponse);
-                        results = findViewById(R.id.resultsView);
-                        results.setText(serverResponse);
-                    } else {
-                        serverResponse = response.body().string();
-                        System.out.println("UPLOAD SUCCESSFUL.");
-                        System.out.println(serverResponse);
-
-                        // set the response in the text view
-                        results = findViewById(R.id.resultsView);
-                        results.setText(serverResponse);
-                    }
-                }
-            });
-
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 }
